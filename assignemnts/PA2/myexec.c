@@ -11,25 +11,16 @@ int fib(int x);
 int main(int argc, char *argv[])
 {
     pid_t pid, ppid;
-    int link[2];
     int numChildren = 2;
     int cpids[numChildren];
     int i = 0;
     clock_t start, end;
     double time;
-    char buffer[1024];
-    int readBytes;
 
     start = clock();
     ppid = getpid();
     for(i = 0; i < numChildren; i++)
     {
-        if (pipe(link) == -1)
-        {
-            fprintf(stderr, "Pipe Failed.");
-            exit(EXIT_FAILURE);
-        }
-
         pid = fork();
         if (pid < 0)
         {
@@ -41,25 +32,19 @@ int main(int argc, char *argv[])
             printf("from C%d: own PID=%d, parent's PID=%d\n", i+1, getpid(), ppid);
             fib(20);
 
-            dup2(link[1], 1);
-            close(link[0]);
-            close(link[1]);
             if (i == 0)
             {
-                execl("/bin", "date", NULL);
+                execl("/bin/date", "date", NULL);
             }
             else if (i == 1)
             {
-                execl("/usr/bin", "who", NULL);
+                execl("/usr/bin/who", "who", NULL);
             }
             exit(EXIT_SUCCESS);
         }
         else
         {
             cpids[i] = pid;
-            close(link[1]);
-            while (read(link[0], buffer, sizeof(buffer)) != 0);
-            printf("%s\n", buffer);
             wait(NULL);
         }
     }
